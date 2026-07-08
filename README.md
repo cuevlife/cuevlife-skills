@@ -116,6 +116,7 @@ Skills ที่เพิ่มเข้าไปใน Superpowers (copy ไป
 | **lessons-learned** | KZ Custom | บันทึก bug/solution ข้าม session |
 | **agents** | KZ Custom | สร้าง AGENTS.md อัตโนมัติ |
 | **grounded-debate** | KZ Custom | คู่หูที่เถียงด้วยข้อมูลจริง ป้องกัน blind agreement |
+| **anti-ai-slop-ux** | KZ Custom | ป้องกัน AI-slop UI — gradient, shadows, decoration ที่ไม่จำเป็น |
 
 ```powershell
 # ถ้ามี skills เหล่านี้ใน repo ของคุณ
@@ -125,6 +126,7 @@ Copy-Item -Path ".\skills\ask-user\SKILL.md" -Destination "$SKILLS_DIR\ask-user\
 Copy-Item -Path ".\skills\lessons-learned\SKILL.md" -Destination "$SKILLS_DIR\lessons-learned\SKILL.md" -Force
 Copy-Item -Path ".\skills\agents\SKILL.md" -Destination "$SKILLS_DIR\agents\SKILL.md" -Force
 Copy-Item -Path ".\skills\grounded-debate\SKILL.md" -Destination "$SKILLS_DIR\grounded-debate\SKILL.md" -Force
+Copy-Item -Path ".\skills\anti-ai-slop-ux\SKILL.md" -Destination "$SKILLS_DIR\anti-ai-slop-ux\SKILL.md" -Force
 ```
 
 ---
@@ -206,6 +208,7 @@ Optional flags:
 | **lessons-learned** | จำ bug/solution ไว้ใช้ทีหลัง |
 | **agents** | สร้าง AGENTS.md |
 | **grounded-debate** | ป้องกัน AI เห็นด้วยทุกอย่าง — เถียงด้วยข้อมูลจริง |
+| **anti-ai-slop-ux** | สร้าง UI ที่ดูเป็นมืออาชีพ — ไม่ใช่ AI slop |
 
 ---
 
