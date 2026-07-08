@@ -115,6 +115,7 @@ Skills ที่เพิ่มเข้าไปใน Superpowers (copy ไป
 | **ask-user** | KZ Custom | ถาม user ด้วย `question` tool + batch mode + recommend |
 | **lessons-learned** | KZ Custom | บันทึก bug/solution ข้าม session |
 | **agents** | KZ Custom | สร้าง AGENTS.md อัตโนมัติ |
+| **grounded-debate** | KZ Custom | คู่หูที่เถียงด้วยข้อมูลจริง ป้องกัน blind agreement |
 
 ```powershell
 # ถ้ามี skills เหล่านี้ใน repo ของคุณ
@@ -123,6 +124,7 @@ Copy-Item -Path ".\skills\tester\SKILL.md" -Destination "$SKILLS_DIR\tester\SKIL
 Copy-Item -Path ".\skills\ask-user\SKILL.md" -Destination "$SKILLS_DIR\ask-user\SKILL.md" -Force
 Copy-Item -Path ".\skills\lessons-learned\SKILL.md" -Destination "$SKILLS_DIR\lessons-learned\SKILL.md" -Force
 Copy-Item -Path ".\skills\agents\SKILL.md" -Destination "$SKILLS_DIR\agents\SKILL.md" -Force
+Copy-Item -Path ".\skills\grounded-debate\SKILL.md" -Destination "$SKILLS_DIR\grounded-debate\SKILL.md" -Force
 ```
 
 ---
@@ -200,9 +202,10 @@ Optional flags:
 | Skill | ใช้เมื่อ |
 |-------|---------|
 | **tester** | `/test` — ทดสอบ UI อัตโนมัติ |
-| **ask-user** | เวลาต้องถาม user — บังคับใช้ `question` tool |
+| **ask-user** | เวลาต้องถาม user — บังคัดใช้ `question` tool |
 | **lessons-learned** | จำ bug/solution ไว้ใช้ทีหลัง |
 | **agents** | สร้าง AGENTS.md |
+| **grounded-debate** | ป้องกัน AI เห็นด้วยทุกอย่าง — เถียงด้วยข้อมูลจริง |
 
 ---
 
