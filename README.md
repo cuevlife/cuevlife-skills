@@ -1,6 +1,6 @@
-# KZ OpenCode Starter Pack
+# cuevlife-skills
 
-> ครบจบในที่เดียว — Superpowers + Plugins + MCPs + Custom Skills สำหรับ OpenCode
+> Custom skills collection for OpenCode Superpowers — Grounded Debate, Tester, Ask-User, Lessons Learned + more
 
 ---
 
