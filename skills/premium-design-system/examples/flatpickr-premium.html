@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flatpickr Premium — Design System Reference</title>
+
+<!-- ===== Flatpickr CDN ===== -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+<!-- ===== Bootstrap Icons (สำหรับ chevron) ===== -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<!-- ===== Tailwind (สำหรับ example layout) ===== -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                apple: { blue: '#007AFF', green: '#34C759', red: '#FF3B30', bg: '#F5F5F7', darkBg: '#000000' },
+            }
+        }
+    }
+};
+</script>
+
+<style>
+* { -webkit-font-smoothing: antialiased; }
+body {
+    background: radial-gradient(1100px 620px at 8% -8%, rgba(0,122,255,0.15), transparent 60%),
+                radial-gradient(900px 600px at 50% 118%, rgba(52,199,89,0.10), transparent 60%),
+                #EDEEF2;
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+.dark body {
+    background: radial-gradient(1100px 620px at 8% -8%, rgba(10,132,255,0.20), transparent 60%),
+                radial-gradient(900px 600px at 50% 118%, rgba(48,209,88,0.10), transparent 60%),
+                #07070B;
+    background-attachment: fixed;
+}
+.glass-card {
+    background: rgba(255,255,255,0.62);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.6);
+}
+.dark .glass-card {
+    background: rgba(28,28,30,0.6);
+    border-color: rgba(255,255,255,0.08);
+}
+[x-cloak] { display: none !important; }
+
+/* ════════════════════════════════════════════════
+   FLATPICKR PREMIUM CALENDAR — START COPY HERE
+   ════════════════════════════════════════════════ */
+
+/* ── Calendar Container (Glassmorphism) ── */
+.flatpickr-calendar {
+    background: rgba(255,255,255,0.85) !important;
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.6) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 44px rgba(0,0,0,0.18) !important;
+    font-family: inherit !important;
+}
+.dark .flatpickr-calendar {
+    background: rgba(28,28,30,0.9) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    color: #F5F5F7;
+}
+.flatpickr-calendar.arrowTop:before,
+.flatpickr-calendar.arrowTop:after,
+.flatpickr-calendar.arrowBottom:before,
+.flatpickr-calendar.arrowBottom:after { display: none; }
+
+/* ── Hide Default Header ── */
+.flatpickr-months, .flatpickr-weekdays, .flatpickr-month,
+span.flatpickr-weekday, .flatpickr-current-month { background: transparent !important; }
+.flatpickr-month { overflow: visible !important; z-index: 10; }
+.flatpickr-current-month,
+.flatpickr-prev-month,
+.flatpickr-next-month { display: none !important; }
+
+/* ── Premium Header (Month/Year Select + Nav Arrows) ── */
+.sb-premium-header {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 4px 10px; width: 100%; position: relative; z-index: 100;
+}
+.sb-premium-select { position: relative; cursor: pointer; z-index: 101; }
+.sb-premium-trigger {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    padding: 5px 12px; border-radius: 8px;
+    background: rgba(0,122,255,0.05); border: 1px solid transparent;
+    transition: all 0.2s; user-select: none;
+}
+.sb-premium-trigger:hover { background: rgba(0,122,255,0.1); border-color: rgba(0,122,255,0.2); }
+.sb-premium-label { font-size: 13px; font-weight: 800; color: #1d1d1f; pointer-events: none; }
+.dark .sb-premium-label { color: #f2f3f5; }
+.sb-premium-chevron { font-size: 10px; color: #80848e; transition: transform 0.2s; }
+.sb-premium-trigger.active .sb-premium-chevron { transform: rotate(180deg); }
+
+/* ── Dropdown Menu ── */
+.sb-premium-menu {
+    position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+    background: #fff; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 9999;
+    width: 160px; padding: 6px; display: none;
+    max-height: 220px; overflow-y: auto;
+}
+.dark .sb-premium-menu {
+    background: #2b2d31; border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.sb-premium-menu.active { display: block !important; animation: sb-premium-fade 0.15s ease-out; }
+
+/* ── Dropdown Items ── */
+.sb-premium-item {
+    padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; color: #4e5058;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;
+}
+.dark .sb-premium-item { color: #b5bac1; }
+.sb-premium-item:hover { background: rgba(0,122,255,0.1); color: #007AFF; }
+.sb-premium-item.selected { background: #007AFF; color: #fff !important; }
+.sb-premium-item.selected i { color: #fff; }
+
+@keyframes sb-premium-fade {
+    from { opacity: 0; transform: translate(-50%, -8px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ── Nav Arrows (Prev/Next Month) ── */
+.sb-premium-nav {
+    height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; color: #80848e; cursor: pointer; transition: all 0.2s;
+    border: 1px solid transparent; background: rgba(0,0,0,0.02); flex-shrink: 0;
+}
+.dark .sb-premium-nav { background: rgba(255,255,255,0.02); }
+.sb-premium-nav:hover { background: rgba(0,122,255,0.1); color: #007AFF; border-color: rgba(0,122,255,0.2); }
+.sb-premium-nav i { font-size: 14px; font-weight: bold; }
+
+/* ── Weekdays ── */
+.flatpickr-weekdays { margin-bottom: 2px; }
+.flatpickr-weekday {
+    color: #80848e; font-weight: 800; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em; background: transparent;
+}
+.dark .flatpickr-weekday { color: rgba(255,255,255,0.45) !important; }
+
+/* ── Day Cells ── */
+.dark .flatpickr-day { color: #E5E5EA; }
+.flatpickr-day { border-radius: 10px !important; }
+.flatpickr-day:hover, .flatpickr-day:focus { background: rgba(0,122,255,0.12) !important; border-color: transparent !important; }
+.dark .flatpickr-day:hover, .dark .flatpickr-day:focus { background: rgba(255,255,255,0.10) !important; }
+.flatpickr-day.today { border-color: #007AFF !important; }
+.flatpickr-day.selected, .flatpickr-day.selected:hover {
+    background: #007AFF !important; border-color: #007AFF !important; color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0,122,255,0.4);
+}
+.dark .flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled { color: rgba(120,120,128,0.4) !important; }
+.numInputWrapper span.arrowUp, .numInputWrapper span.arrowDown { border: none; }
+
+/* ── Scrollbar for dropdown ── */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; border: none; }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+
+/* ════════════════════════════════════════════════
+   FLATPICKR PREMIUM CALENDAR — END COPY HERE
+   ════════════════════════════════════════════════ */
+
+/* ── Demo: accent color swatches ── */
+.swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; transition: transform 0.2s; border: 2px solid transparent; }
+.swatch:hover { transform: scale(1.15); }
+.swatch.active { border-color: #1d1d1f; }
+.dark .swatch.active { border-color: #f2f3f5; }
+
+/* ── Code block ── */
+code { font-family: 'JetBrains Mono', 'SF Mono', monospace; }
+pre {
+    background: rgba(0,0,0,0.04);
+    border-radius: 12px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.dark pre { background: rgba(255,255,255,0.04); }
+</style>
+</head>
+<body>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight">📅 Flatpickr Premium</h1>
+            <p class="text-gray-500 text-[14px] mt-1">Custom month/year dropdown selectors + Thai locale + พ.ศ.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-[12px] text-gray-400">Theme</span>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="px-4 py-2 rounded-xl bg-black/5 dark:bg-white/10 text-sm font-medium hover:bg-black/10 dark:hover:bg-white/15 transition active:scale-95">Toggle Dark</button>
+        </div>
+    </div>
+
+    <!-- Demo Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+        <!-- Card: Single Date -->
+        <div class="glass-card rounded-2xl p-6 border border-black/5 dark:border-white/10">
+            <div class="text-[15px] font-semibold mb-1">Single Date</div>
+            <p class="text-[12px] text-gray-400 mb-4">Thai locale + พ.ศ. year</p>
+            <label class="block text-[12px] text-gray-500 mb-1.5">เลือกวันที่</label>
+            <input type="text" class="js-date w-full px-3 py-2 bg-white/60 dark:bg-white/10 border border-black/10 dark:border-white/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-apple-blue/30 dark:text-white">
+        </div>
+
+        <!-- Card: Date Range -->
+        <div class="glass-card rounded-2xl p-6 border border-black/5 dark:border-white/10">
+            <div class="text-[15px] font-semibold mb-1">Date Range</div>
+            <p class="text-[12px] text-gray-400 mb-4">Premium header with multi-select</p>
+            <label class="block text-[12px] text-gray-500 mb-1.5">ช่วงวันที่</label>
+            <input type="text" id="date-range" class="w-full px-3 py-2 bg-white/60 dark:bg-white/10 border border-black/10 dark:border-white/10 rounded-xl text-sm outline-none focus:ring-2 focus:ring-apple-blue/30 dark:text-white">
+        </div>
+
+    </div>
+
+    <!-- Accent Color Swatches -->
+    <div class="glass-card rounded-2xl p-5 border border-black/5 dark:border-white/10 mb-6">
+        <div class="flex items-center gap-4">
+            <span class="text-[12px] font-medium text-gray-500">Accent color:</span>
+            <button class="swatch active" style="background:#007AFF" data-hex="#007AFF" data-r="0" data-g="122" data-b="255" title="Apple Blue"></button>
+            <button class="swatch" style="background:#34C759" data-hex="#34C759" data-r="52" data-g="199" data-b="89" title="Apple Green"></button>
+            <button class="swatch" style="background:#FF3B30" data-hex="#FF3B30" data-r="255" data-g="59" data-b="48" title="Apple Red"></button>
+            <button class="swatch" style="background:#AF52DE" data-hex="#AF52DE" data-r="175" data-g="82" data-b="222" title="Purple"></button>
+        </div>
+    </div>
+
+    <!-- Code Reference -->
+    <div class="glass-card rounded-2xl border border-black/5 dark:border-white/10 overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-black/5 dark:border-white/10 flex items-center gap-2">
+            <span class="text-[15px] font-semibold">Usage Reference</span>
+            <span class="text-[12px] text-gray-400 ml-auto">copy-paste ready</span>
+        </div>
+        <div class="p-5 space-y-4">
+            <div>
+                <div class="text-[13px] font-semibold mb-2">1. CDN (ใน &lt;head&gt;)</div>
+                <pre>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/flatpickr"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"&gt;&lt;/script&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"&gt;</pre>
+            </div>
+            <div>
+                <div class="text-[13px] font-semibold mb-2">2. Input element</div>
+                <pre>&lt;input type="text" class="js-date" value="2026-07-14"&gt;</pre>
+            </div>
+            <div>
+                <div class="text-[13px] font-semibold mb-2">3. JavaScript init</div>
+                <pre>flatpickr('.js-date', {
+    dateFormat: 'Y-m-d',
+    locale: flatpickr.l10ns?.th || 'en',
+    monthSelectorType: 'static',
+    allowInput: false,
+    disableMobile: true,
+    onReady: function(selectedDates, dateStr, instance) {
+        // ... premium header code (see below)
+    }
+});</pre>
+            </div>
+            <div>
+                <div class="text-[13px] font-semibold mb-2">4. Accent color variables (in CSS)</div>
+                <pre>/* เปลี่ยน rgba(0,122,255, ...) และ #007AFF ให้ตรงกับธีม */
+/* Apple Blue:  0,122,255 / #007AFF */
+/* Apple Green: 52,199,89 / #34C759 */
+/* Purple:      175,82,222 / #AF52DE */</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full JS Copy -->
+    <div class="glass-card rounded-2xl border border-black/5 dark:border-white/10 overflow-hidden">
+        <div class="px-5 py-4 border-b border-black/5 dark:border-white/10 flex items-center gap-2">
+            <span class="text-[15px] font-semibold">Full JavaScript (copy-paste)</span>
+        </div>
+        <div class="p-5">
+            <pre id="full-js-code" style="max-height:400px; overflow-y:auto;">document.addEventListener('DOMContentLoaded', function () {
+    if (!window.flatpickr) return;
+
+    var isThai = document.documentElement.lang === 'th';
+
+    function createPremiumSelect(container, options, initialValue, onSelect) {
+        var select = document.createElement('div');
+        select.className = 'sb-premium-select';
+        var trigger = document.createElement('div');
+        trigger.className = 'sb-premium-trigger';
+        select.appendChild(trigger);
+        var label = document.createElement('span');
+        label.className = 'sb-premium-label';
+        trigger.appendChild(label);
+        var chevron = document.createElement('i');
+        chevron.className = 'bi bi-chevron-down sb-premium-chevron';
+        trigger.appendChild(chevron);
+        var menu = document.createElement('div');
+        menu.className = 'sb-premium-menu custom-scrollbar';
+        select.appendChild(menu);
+        var currentValue = initialValue;
+        function update(newVal) {
+            currentValue = newVal;
+            var opt = options.find(function(o) { return o.v == currentValue; });
+            label.textContent = opt ? opt.l : '';
+            menu.innerHTML = '';
+            options.forEach(function(opt) {
+                var item = document.createElement('div');
+                item.className = 'sb-premium-item' + (opt.v == currentValue ? ' selected' : '');
+                item.innerHTML = '&lt;span&gt;' + opt.l + '&lt;/span&gt;' + (opt.v == currentValue ? '&lt;i class="bi bi-check2 text-xs"&gt;&lt;/i&gt;' : '');
+                item.onmousedown = function(e) { e.preventDefault(); e.stopPropagation(); onSelect(opt.v); update(opt.v); menu.classList.remove('active'); trigger.classList.remove('active'); };
+                menu.appendChild(item);
+            });
+        }
+        trigger.onmousedown = function(e) {
+            e.preventDefault(); e.stopPropagation();
+            document.querySelectorAll('.sb-premium-menu').forEach(function(m) { if (m !== menu) m.classList.remove('active'); });
+            document.querySelectorAll('.sb-premium-trigger').forEach(function(t) { if (t !== trigger) t.classList.remove('active'); });
+            var isActive = menu.classList.toggle('active');
+            trigger.classList.toggle('active', isActive);
+            if (isActive) {
+                setTimeout(function() {
+                    var selectedItem = menu.querySelector('.sb-premium-item.selected');
+                    if (selectedItem) selectedItem.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                }, 50);
+            }
+        };
+        update(initialValue);
+        container.appendChild(select);
+        return { dom: select, update: update };
+    }
+
+    flatpickr('.js-date', {
+        dateFormat: 'Y-m-d',
+        locale: isThai && flatpickr.l10ns && flatpickr.l10ns.th ? flatpickr.l10ns.th : 'en',
+        monthSelectorType: 'static',
+        allowInput: false,
+        disableMobile: true,
+        onReady: function(selectedDates, dateStr, instance) {
+            var monthContainer = instance.calendarContainer.querySelector('.flatpickr-month');
+            if (!monthContainer) return;
+            var header = document.createElement('div');
+            header.className = 'sb-premium-header';
+            var prevBtn = document.createElement('div');
+            prevBtn.className = 'sb-premium-nav prev';
+            prevBtn.innerHTML = '&lt;i class="bi bi-chevron-left"&gt;&lt;/i&gt;';
+            prevBtn.onmousedown = function(e) { e.preventDefault(); e.stopPropagation(); instance.changeMonth(-1, true); };
+            header.appendChild(prevBtn);
+            var monthNames = instance.l10n.months.longhand;
+            var monthOpts = monthNames.map(function(name, i) { return { v: i, l: name }; });
+            var monthSelect = createPremiumSelect(header, monthOpts, instance.currentMonth, function(val) { instance.changeMonth(val, false); });
+            var yearOpts = [];
+            for (var y = 2000; y <= 2100; y++) { yearOpts.push({ v: y, l: isThai ? (y + 543) : y }); }
+            var yearSelect = createPremiumSelect(header, yearOpts, instance.currentYear, function(val) { instance.changeYear(val); });
+            var nextBtn = document.createElement('div');
+            nextBtn.className = 'sb-premium-nav next';
+            nextBtn.innerHTML = '&lt;i class="bi bi-chevron-right"&gt;&lt;/i&gt;';
+            nextBtn.onmousedown = function(e) { e.preventDefault(); e.stopPropagation(); instance.changeMonth(1, true); };
+            header.appendChild(nextBtn);
+            monthContainer.appendChild(header);
+            instance.config.onMonthChange = instance.config.onMonthChange || [];
+            instance.config.onYearChange = instance.config.onYearChange || [];
+            instance.config.onMonthChange.push(function() { monthSelect.update(instance.currentMonth); });
+            instance.config.onYearChange.push(function() { yearSelect.update(instance.currentYear); });
+            document.addEventListener('mousedown', function(e) {
+                if (!e.target.closest('.sb-premium-select')) {
+                    document.querySelectorAll('.sb-premium-menu').forEach(function(m) { m.classList.remove('active'); });
+                    document.querySelectorAll('.sb-premium-trigger').forEach(function(t) { t.classList.remove('active'); });
+                }
+            });
+        }
+    });
+
+    // Date range example
+    flatpickr('#date-range', {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        locale: isThai && flatpickr.l10ns && flatpickr.l10ns.th ? flatpickr.l10ns.th : 'en',
+        monthSelectorType: 'static',
+        maxDate: new Date(),
+        onReady: /* same onReady as above */
+    });
+});</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// FLATPICKR PREMIUM INIT
+// ════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (!window.flatpickr) return;
+
+    var isThai = document.documentElement.lang === 'th';
+
+    // ── Helper ──
+    function createPremiumSelect(container, options, initialValue, onSelect) {
+        var select = document.createElement('div');
+        select.className = 'sb-premium-select';
+        var trigger = document.createElement('div');
+        trigger.className = 'sb-premium-trigger';
+        select.appendChild(trigger);
+        var label = document.createElement('span');
+        label.className = 'sb-premium-label';
+        trigger.appendChild(label);
+        var chevron = document.createElement('i');
+        chevron.className = 'bi bi-chevron-down sb-premium-chevron';
+        trigger.appendChild(chevron);
+        var menu = document.createElement('div');
+        menu.className = 'sb-premium-menu custom-scrollbar';
+        select.appendChild(menu);
+        var currentValue = initialValue;
+        function update(newVal) {
+            currentValue = newVal;
+            var opt = options.find(function(o) { return o.v == currentValue; });
+            label.textContent = opt ? opt.l : '';
+            menu.innerHTML = '';
+            options.forEach(function(opt) {
+                var item = document.createElement('div');
+                item.className = 'sb-premium-item' + (opt.v == currentValue ? ' selected' : '');
+                item.innerHTML = '<span>' + opt.l + '</span>' + (opt.v == currentValue ? '<i class="bi bi-check2 text-xs"></i>' : '');
+                item.onmousedown = function(e) { e.preventDefault(); e.stopPropagation(); onSelect(opt.v); update(opt.v); menu.classList.remove('active'); trigger.classList.remove('active'); };
+                menu.appendChild(item);
+            });
+        }
+        trigger.onmousedown = function(e) {
+            e.preventDefault(); e.stopPropagation();
+            document.querySelectorAll('.sb-premium-menu').forEach(function(m) { if (m !== menu) m.classList.remove('active'); });
+            document.querySelectorAll('.sb-premium-trigger').forEach(function(t) { if (t !== trigger) t.classList.remove('active'); });
+            var isActive = menu.classList.toggle('active');
+            trigger.classList.toggle('active', isActive);
+            if (isActive) {
+                setTimeout(function() {
+                    var selectedItem = menu.querySelector('.sb-premium-item.selected');
+                    if (selectedItem) selectedItem.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                }, 50);
+            }
+        };
+        update(initialValue);
+        container.appendChild(select);
+        return { dom: select, update: update };
+    }
+
+    // ── Reusable onReady ──
+    function premiumOnReady(selectedDates, dateStr, instance) {
+        var monthContainer = instance.calendarContainer.querySelector('.flatpickr-month');
+        if (!monthContainer) return;
+        var header = document.createElement('div');
+        header.className = 'sb-premium-header';
+        var prevBtn = document.createElement('div');
+        prevBtn.className = 'sb-premium-nav prev';
+        prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+        prevBtn.onmousedown = function(e) { e.preventDefault(); e.stopPropagation(); instance.changeMonth(-1, true); };
+        header.appendChild(prevBtn);
+        var monthNames = instance.l10n.months.longhand;
+        var monthOpts = monthNames.map(function(name, i) { return { v: i, l: name }; });
+        var monthSelect = createPremiumSelect(header, monthOpts, instance.currentMonth, function(val) { instance.changeMonth(val, false); });
+        var yearOpts = [];
+        for (var y = 2000; y <= 2100; y++) { yearOpts.push({ v: y, l: isThai ? (y + 543) : y }); }
+        var yearSelect = createPremiumSelect(header, yearOpts, instance.currentYear, function(val) { instance.changeYear(val); });
+        var nextBtn = document.createElement('div');
+        nextBtn.className = 'sb-premium-nav next';
+        nextBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+        nextBtn.onmousedown = function(e) { e.preventDefault(); e.stopPropagation(); instance.changeMonth(1, true); };
+        header.appendChild(nextBtn);
+        monthContainer.appendChild(header);
+        instance.config.onMonthChange = instance.config.onMonthChange || [];
+        instance.config.onYearChange = instance.config.onYearChange || [];
+        instance.config.onMonthChange.push(function() { monthSelect.update(instance.currentMonth); });
+        instance.config.onYearChange.push(function() { yearSelect.update(instance.currentYear); });
+        document.addEventListener('mousedown', function(e) {
+            if (!e.target.closest('.sb-premium-select')) {
+                document.querySelectorAll('.sb-premium-menu').forEach(function(m) { m.classList.remove('active'); });
+                document.querySelectorAll('.sb-premium-trigger').forEach(function(t) { t.classList.remove('active'); });
+            }
+        });
+    }
+
+    // ── Single Date ──
+    flatpickr('.js-date', {
+        dateFormat: 'Y-m-d',
+        locale: isThai && flatpickr.l10ns && flatpickr.l10ns.th ? flatpickr.l10ns.th : 'en',
+        monthSelectorType: 'static',
+        allowInput: false,
+        disableMobile: true,
+        onReady: premiumOnReady
+    });
+
+    // ── Date Range ──
+    flatpickr('#date-range', {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        locale: isThai && flatpickr.l10ns && flatpickr.l10ns.th ? flatpickr.l10ns.th : 'en',
+        monthSelectorType: 'static',
+        maxDate: new Date(),
+        onReady: premiumOnReady
+    });
+});
+
+// ── Accent color switcher ──
+document.querySelectorAll('.swatch').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.swatch').forEach(function(s) { s.classList.remove('active'); });
+        btn.classList.add('active');
+        var hex = btn.dataset.hex;
+        var r = btn.dataset.r;
+        var g = btn.dataset.g;
+        var b = btn.dataset.b;
+
+        function replaceCSS(selector, prop, pattern, replacement) {
+            var els = document.querySelectorAll(selector);
+            els.forEach(function(el) {
+                if (prop === 'style') {
+                    el.style.cssText = el.style.cssText.replace(
+                        new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+                        replacement
+                    );
+                }
+            });
+        }
+
+        // Update CSS variables via style tags
+        var sheets = document.styleSheets;
+        for (var i = 0; i < sheets.length; i++) {
+            try {
+                var rules = sheets[i].cssRules || sheets[i].rules;
+                if (!rules) continue;
+                for (var j = 0; j < rules.length; j++) {
+                    var rule = rules[j];
+                    if (rule.selectorText && rule.style) {
+                        var css = rule.cssText;
+                        if (css.includes('rgba(0,122,255')) {
+                            rule.style.cssText = css.replace(/rgba\(0,122,255/g, 'rgba(' + r + ',' + g + ',' + b);
+                        }
+                        if (css.includes('#007AFF')) {
+                            rule.style.cssText = css.replace(/#007AFF/g, hex);
+                        }
+                        if (css.includes('rgba(0,122,255')) {
+                            rule.style.cssText = css.replace(/rgba\(0,122,255/g, 'rgba(' + r + ',' + g + ',' + b);
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // Flatpickr day styles
+        var fpDays = document.querySelectorAll('.flatpickr-day');
+        fpDays.forEach(function(day) {
+            if (day.classList.contains('selected')) {
+                day.style.background = hex;
+                day.style.borderColor = hex;
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
