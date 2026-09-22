@@ -1,6 +1,6 @@
 ---
 name: code-man
-description: สไตล์การเขียนโค้ดครบสาย — Human Coding (ไม่โผล่กลิ่น AI), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration) รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
+description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration) รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
 ---
 
 # Code-Man — Full Coding Style
@@ -19,13 +19,15 @@ description: สไตล์การเขียนโค้ดครบสา�
 
 ## Objective
 
-เขียนโค้ดให้ "เหมือนคนเขียน" — อ่านแล้วเข้าใจได้ทันที, ต่อยอดได้, ไม่โผล่กลิ่น AI ใช้เมื่อเขียนหรือแก้ไขโค้ดทุกชนิด (PHP, JS, SQL, view, doc)
+เขียนโค้ดให้ "เหมือนคนเขียน" — อ่านแล้วเข้าใจได้ทันที, ต่อยอดได้, ไม่โผล่กลิ่น AI, **ใช้ง่าย (เรียกใช้ไม่ต้องเดา), แก้ง่าย (บั๊กแล้ว isolate ได้เร็ว), และไม่หลุดกรอบ framework/convention ของโปรเจกต์** ใช้เมื่อเขียนหรือแก้ไขโค้ดทุกชนิด (PHP, JS, SQL, view, doc)
 
-## หลักคิด 4 มิติ
+## หลักคิด 6 มิติ
 
 | มิติ | สาระ |
 |------|------|
 | **Style** | โค้ดอ่านแล้วรู้เรื่องเหมือนคนเขียน — ชื่อบอก intent, flow เป็นธรรมชาติ, ไม่ clever |
+| **Easy to Use / Easy to Fix** | เรียกใช้ได้โดยไม่ต้องเปิดอ่าน implementation ก่อน (ชื่อ+parameter บอกพอ), บั๊กแล้ว isolate ได้เร็ว — error ชัด, ไม่ไล่หลายไฟล์เพื่อแก้จุดเดียว |
+| **Framework Boundary** | ใช้ mechanism ที่ framework/library มีให้ก่อนเสมอ (ORM, router, validation) ไม่เขียนทางลัดข้าม, และเขียนตาม pattern/convention เดิมของโปรเจกต์ (ดู "Framework Boundary" ด้านล่าง) |
 | **Workflow** | พฤติกรรมตอนทำงานเหมือนคน — คิดก่อนแก้, อ่านรอบข้าง, ไม่เร่ง, ไม่ทำเกินขอ |
 | **Anti-AI** | ไม่มี AI smell — ตรวจก่อนเสร็จทุกครั้ง (ตารางด้านล่าง) |
 | **Collaboration** | ทำงานกับคน — ถามเป็นช้อย, เสนอทางเลือก, ให้คนตัดสินใจเรื่องสำคัญ |
@@ -61,6 +63,8 @@ description: สไตล์การเขียนโค้ดครบสา�
 | 11 | Refactor/rename/format ปนกับงาน | แตะเท่าที่ต้องแตะ — ของอื่นไม่เกี่ยวกับงาน |
 | 12 | แก้หลายจุดในรอบเดียว | 1 commit = 1 เรื่อง — แก้ทีละจุดดูผลก่อน |
 | 13 | ครอบทั้งหน้า PHP ด้วย JS/AJAX ทั้งที่ HTML ล้วนก็ทำงานได้ | native HTML ก่อนเสมอ (`<a href>`, `<form>`, `<details>`) — เสริม AJAX เฉพาะจุดที่ HTML ทำไม่ได้จริง (ดูหัวข้อ 3. CSS-First) |
+| 14 | เขียนข้าม mechanism ของ framework (raw SQL ทั้งที่มี ORM/query builder, custom router ทับ router เดิม, manual validation ทั้งที่มี validator) | เช็คก่อนว่า framework มีทางให้ใช้ไหม — ใช้ทางนั้นก่อนเสมอ ข้ามเฉพาะกรณีที่ framework ทำไม่ได้จริงและบอก user ว่าทำไม |
+| 15 | เปิด API/function ที่ต้องรู้ implementation ภายในก่อนเรียกถูก (ชื่อไม่บอก parameter ต้องส่งอะไร, ต้องอ่าน source ก่อนใช้) | ชื่อ + signature ต้องเดาวิธีใช้ได้จากภายนอก ไม่ต้องเปิดไฟล์อ่านก่อน |
 
 ## Human Essence — สิ่งที่ทำให้โค้ดดูมีคนเขียน
 
@@ -82,6 +86,36 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 | ตั้งชื่อผิดความหมาย (Sidebar = Navbar) | อ่านแล้วเข้าใจผิด — ตั้งชื่อตาม intent |
 | ทำผิดพลาดแล้วปล่อย (undefined variable, ส่ง object ไป json) | ต้อง verify จริง (Step 9) |
 | เขียนซ้ำ 8-10 จุดไม่ DRY | pattern ซ้ำ 2+ ครั้ง → extract (ข้อ 3) |
+
+## Framework Boundary — ไม่หลุดกรอบ framework
+
+หลุดกรอบมี 2 แบบ ต้องเช็คทั้งคู่ก่อนเขียนโค้ดในโปรเจกต์ที่มี framework:
+
+1. **หลุดกรอบ mechanism** — framework/library มีทางให้ใช้อยู่แล้ว (ORM, router, validator, migration tool, auth middleware) แต่เขียนข้ามไปทำเอง (raw SQL ทั้งที่มี query builder, custom auth check ทั้งที่มี middleware) → เสียของที่ framework ทดสอบมาแล้ว, คนอื่นอ่านโค้ดคาดเดา flow ไม่ได้เพราะไม่ตรงกับที่ framework สอน
+2. **หลุดกรอบ pattern** — โปรเจกต์มี convention เดิม (โฟลเดอร์, naming, MVC boundary, ชื่อ helper class) แต่เขียนไฟล์ใหม่ด้วยสไตล์ตัวเอง ไม่ดูของเดิมก่อน → โปรเจกต์มีสองสไตล์ปนกัน แก้ทีต้องรู้ว่าไฟล์นี้ "แบบไหน"
+
+**ก่อนเขียนโค้ดใหม่ในโปรเจกต์ที่มี framework:**
+1. เช็คว่า framework มี mechanism ให้ใช้ไหม (เปิด doc/comment ของ framework หรือดูโค้ดที่เคยเรียกใช้ฟีเจอร์เดียวกัน) — มี → ใช้ทางนั้น ไม่มี → ค่อยเขียนเอง
+2. เปิดไฟล์ข้างๆ (ไฟล์เดียว controller/model เดียวกัน หรือไฟล์ประเภทเดียวกันในโฟลเดอร์) ดู pattern จริงก่อนเขียนไฟล์ใหม่
+3. โปรเจกต์มี `AGENTS.md`/`CLAUDE.md` เฉพาะตัว → อ่านกฎ framework-specific ที่นั่นก่อนเสมอ กฎในหัวข้อนี้เป็น fallback ทั่วไปเท่านั้น
+4. จำเป็นต้องข้าม mechanism จริงๆ (framework ทำไม่ได้ตามที่ต้องการ) → บอก user ตรงๆ ว่าข้ามเพราะอะไร ไม่ใช่ข้ามเงียบๆ
+
+```
+❌ $result = $pdo->query("SELECT * FROM users WHERE id = $id"); // framework มี Eloquent/query builder อยู่แล้ว
+✅ User::where('id', $id)->first();
+
+❌ if ($_SESSION['role'] === 1) { ... }              // framework มี middleware/policy อยู่แล้ว
+✅ $this->authorize('admin.access');                 // ใช้ auth mechanism ของ framework
+
+❌ สร้าง app/Helpers/MyValidator.php เอง             // framework มี validation rule ให้แล้ว
+✅ ใช้ validation rule ของ framework, extend เฉพาะ rule ที่ framework ไม่มีจริงๆ
+```
+
+**Constraints:**
+- ห้ามเขียน raw query/manual auth/manual validation ถ้า framework มี mechanism ให้ใช้อยู่แล้ว
+- ห้ามสร้างไฟล์ใหม่โดยไม่เปิดดู pattern ไฟล์ประเภทเดียวกันในโปรเจกต์ก่อน
+- ข้าม mechanism ของ framework ได้เฉพาะกรณีพิสูจน์แล้วว่าทำไม่ได้จริง — ต้องบอก user เหตุผลเสมอ ห้ามข้ามเงียบๆ
+- `AGENTS.md`/`CLAUDE.md` ของโปรเจกต์ (ถ้ามี) มีน้ำหนักเหนือกฎทั่วไปในหัวข้อนี้
 
 ## Examples
 
@@ -131,6 +165,7 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 - ห้ามลบ dead code เดิมที่ไม่ได้ขอ (ข้อ 12)
 - Commit format `what: description`, push ต่อเมื่อ test ผ่าน, ห้าม refactor ปนกับ commit fix (ข้อ 21)
 - Refactor โค้ดเดิม (ไม่ใช่ fix/feature) ต้องมี safety net ก่อนแตะ + ทีละก้าวเล็ก (ข้อ 22)
+- ห้ามเขียนข้าม mechanism ของ framework ที่มีให้อยู่แล้ว และห้ามเขียนไฟล์ใหม่โดยไม่ดู pattern เดิมก่อน (ดู "Framework Boundary")
 
 โปรเจคที่มี framework/convention เฉพาะตัว (เช่น modal component, MVC helper class เฉพาะ, container name) — ดูกฎเพิ่มเติมใน `AGENTS.md` ของโปรเจคนั้น กฎในนี้เป็นหลักการทั่วไปข้ามโปรเจค
 
@@ -138,6 +173,7 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 
 **Simplest thing that could possibly work. No comments. No hardcode. No overengineering.**
 **เขียนเหมือนคนที่อยากให้คนอื่นอ่านต่อ — ไม่งั้นก็ไม่ต่างจาก AI**
+**ใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework — โค้ดที่ดีคือโค้ดที่คนอื่น (หรือตัวเองอีก 3 เดือนข้างหน้า) เรียกใช้ถูกโดยไม่ต้องเดา และแก้บั๊กได้โดยไม่ต้องไล่อ่านทั้งโปรเจกต์**
 
 ## Effectiveness Indicators — รู้ได้ยังไงว่า human coding ได้ผลจริง
 
@@ -149,6 +185,8 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 | Rewrite | แทบไม่มี — คิดครบตั้งแต่รอบแรก | เขียนใหม่ซ้ำเพราะ overengineer แล้วต้องถอด |
 | จังหวะถาม | ถามช้อยก่อนเริ่ม เมื่อไม่แน่ใจ | เดาแล้วเขียน พลาดแล้วค่อยถาม |
 | Bug ซ้ำ root cause เดิม | ลดลง — เพราะมี post-mortem (rule 19.8) | เจอ pattern เดิมพังคนละจุดซ้ำเรื่อยๆ |
+| เวลาแก้บั๊ก 1 จุด | ไล่ไฟล์เดียว/ฟังก์ชันเดียวจบ | ต้องไล่ข้ามหลายไฟล์เพราะ logic กระจาย/ข้าม mechanism ของ framework |
+| เรียกใช้ function/API ที่เพิ่งเขียน | เดา parameter ถูกจากชื่อ ไม่ต้องเปิด implementation | ต้องเปิดไฟล์อ่าน source ก่อนถึงเรียกถูก |
 
 รายละเอียดกฎแต่ละข้อที่ Constraints อ้างถึง (เช่น MVC boundary, hardcode, comment, naming, bug fix protocol, git commit/branch, refactor โค้ดเดิม, temp script, การเขียน skill ให้ AI) อยู่ใน [references/rules.md](references/rules.md) — เปิดอ่านเมื่อ Constraints/AI Smell table ไม่พอ
 
