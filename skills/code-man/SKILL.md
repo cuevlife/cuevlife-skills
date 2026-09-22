@@ -1,17 +1,18 @@
 ---
 name: code-man
-description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration) รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
+description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging, senior UX/UI (5 states, Nielsen heuristics, accessibility) — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration), Senior UX/UI รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI/UX ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
 ---
 
 # Code-Man — Full Coding Style
 
-รวม 5 เรื่องของสไตล์การเขียนโค้ดที่ใช้ต่อกันได้ตลอดสาย:
+รวม 6 เรื่องของสไตล์การเขียนโค้ดที่ใช้ต่อกันได้ตลอดสาย:
 
 1. **Human Coding** — หลักทั่วไปทุกครั้งที่เขียน/แก้โค้ด
 2. **Extensible Architecture** — ตอนออกแบบให้ยืดหยุ่น ไม่ hardcode
-3. **CSS-First** — ตอนทำงาน UI/visual
-4. **Design-from-Reference** — ตอนสร้างเว็บจากลิงค์ ref จริง (เรียกใช้ #1 และ #3 ตอน build)
+3. **CSS-First** — ตอนทำงาน UI/visual (เทคนิค CSS vs JS)
+4. **Design-from-Reference** — ตอนสร้างเว็บจากลิงค์ ref จริง (เรียกใช้ #1, #3, #6 ตอน build)
 5. **Grounded DB** — ตอนแตะ schema/SQL/migration
+6. **Senior UX/UI Principles** — ตอนออกแบบ/ตรวจ UI (states, Nielsen heuristics, accessibility)
 
 ---
 
@@ -70,6 +71,10 @@ description: สไตล์การเขียนโค้ดครบสา�
 | 18 | Boolean parameter trap — `sendInvoice($invoice, true, false)` เดาไม่ออกว่า `true`/`false` คืออะไรถ้าไม่เปิด source | ใช้ named argument (`sendInvoice($invoice, sendEmail: true)`), enum/constant, หรือแยกเป็นฟังก์ชันคนละชื่อ (`sendInvoiceSilently()`) |
 
 Item 15-18 มาจากหลักที่เรียกว่า **Principle of Least Astonishment** — ฟังก์ชัน/API ต้องทำสิ่งที่คาดเดาได้จากชื่อ ไม่ทำอะไรที่คนเรียกไม่คาดคิด (อ้างอิง Scott Meyers: "easy to use correctly, hard to use incorrectly")
+
+**ข้อ 3 กับข้อ 4 ไม่ได้ขัดกับหัวข้อ Idempotency/Observability ด้านล่าง — คนละเรื่อง:**
+- ข้อ 3 "ทำเกินขอ" หมายถึง feature/validation/logging ที่ "เผื่อไว้" โดยไม่มีเหตุผลจริงรองรับ ไม่ใช่ baseline correctness ที่ action มี side effect จริง (สร้าง order, ตัดเงิน, webhook) ต้องมีเสมอ — idempotency กับ error logging ที่ actionable เป็นของที่ต้องทำแม้ user ไม่ได้พูดถึง เหมือนกฎ security ที่ทำเสมอไม่ต้องรอสั่ง (ดู "ลำดับความสำคัญ" ในหัวข้อ Framework Boundary)
+- ข้อ 4 "defensive เกิน" หมายถึง null-check/try-catch แบบเหวี่ยงแหทุกจุดไม่มีเป้า ไม่ใช่การ catch exception ที่รู้แน่ชัดว่าจะเกิดและมีทางจัดการชัดเจน (เช่น duplicate-key exception ในหัวข้อ Idempotency) — catch แบบเจาะจงมีเหตุผลรองรับ ≠ defensive เกิน
 
 ## Human Essence — สิ่งที่ทำให้โค้ดดูมีคนเขียน
 
@@ -637,6 +642,7 @@ public static function forUser(int $userId, int $roleId): array
 - **ห้าม abstraction เผื่ออนาคต** → ไม่สร้าง component wrapper/layer ที่ spec ไม่ได้ขอ (AI Smell ข้อ 2, 3)
 - **ห้าม comment obvious** — comment เฉพาะที่บอกทำไม/ที่มาของค่า token (Human Essence ข้อ 4)
 - **ทำเท่าที่ DESIGN.md ระบุ** — ไม่เพิ่ม section/feature ที่ไม่ได้อนุมัติ (AI Smell ข้อ 3)
+- **ทุกหน้าที่โหลดข้อมูล/มี form ต้องมีครบ 5 states** และ contrast สีผ่าน WCAG AA — ดูหัวข้อ 6. Senior UX/UI Principles ก่อน build จริง ไม่ใช่แค่ตอน DESIGN.md
 
 ---
 
@@ -678,7 +684,7 @@ user มักพูดเป็นคำกว้างๆ ต้องแป�
 0. **ก่อนสร้างตารางใหม่ (หรือคอลัมน์ใหม่แบบเผื่อไว้)** → verify: มีใครจะ**เขียน**มันจริงจาก UI/flow ที่มีอยู่จริงไหม ไม่ใช่แค่ "เผื่ออนาคต" — ดูหัวข้อ Code-first vs DB-first ด้านล่าง
 1. **ออกแบบ schema** → verify: status เป็น int, ไม่มี duplicate data, FK ชัดเจน, มี created_at/updated_at ทุกตาราง
 2. **กำหนด type/size ตามการใช้งานจริง** → verify: column ยาวเท่าที่ใช้จริง ไม่เผื่อเกิน — username VARCHAR(30) ถ้าไม่มีใครใช้เกิน 30 (ห้าม VARCHAR(255) มั่ว), DECIMAL(12,2) ไม่ใช่ FLOAT, ENUM หลีกเลี่ยง (ใช้ TINYINT + constant)
-3. **เขียน migration** → verify: soft delete ก่อน hard delete, critical write ใช้ transaction + FOR UPDATE
+3. **เขียน migration** → verify: soft delete ก่อน hard delete, critical write ใช้ transaction + FOR UPDATE (กันแก้ row เดิมชนกัน — ถ้าต้องกัน "สร้าง record ซ้ำ" เช่น double-submit/webhook ซ้ำ ดูหัวข้อ Idempotency ในหัวข้อ 1 ด้วย คนละปัญหากับ FOR UPDATE)
 4. **Import xlsx/csv** → verify: read → map → validate → ยืนยันกับ user → execute
 5. **ตรวจก่อน INSERT** → verify: รายงาน conflict/duplicate/missing FK ให้ user เห็น
 
@@ -749,3 +755,69 @@ MariaDB (ต่างจาก MySQL 8) **ไม่มี native binary JSON typ
 1. Read source → map fields → validate → confirm with user → execute
 2. Never auto-import without user confirmation
 3. Report conflicts, duplicates, missing FKs before INSERT
+
+---
+
+# 6. Senior UX/UI Principles
+
+## Objective
+
+ออกแบบ/ตรวจ UI ให้ผ่านมาตรฐานที่คนใช้คาดหวังจาก dev มีประสบการณ์ — ไม่ใช่แค่ "กดได้" แต่ "กดแล้วรู้ว่าเกิดอะไรขึ้น ไม่งง ไม่กลัวพัง" อ้างอิง Nielsen's 10 Usability Heuristics + WCAG พื้นฐาน แปลงเป็น checklist ที่ทำได้จริงในโปรเจค solodev (ไม่ต้องมี UX designer แยก)
+
+## 5 States — ทุกหน้า/component ที่โหลดข้อมูลหรือรับ action ต้องคิดครบ
+
+คิดตอนออกแบบ ไม่ใช่ค่อยเติมทีหลังตอนมีคนถามว่า "ทำไมหน้าขาวๆ":
+
+| State | ต้องมีอะไร |
+|---|---|
+| default | หน้าปกติที่มีข้อมูล |
+| loading | บอกว่า "กำลังทำอะไร" (ไม่ใช่ spinner ลอยๆ ไม่มีข้อความ) และ**ต้อง disable action ซ้ำทันที** — เชื่อมตรงกับหัวข้อ Idempotency ในหัวข้อ 1 (double-submit เกิดตรงจังหวะนี้พอดี) |
+| empty | ไม่ใช่กล่องขาวเปล่า — บอกว่าทำไมไม่มีข้อมูล + ทำอะไรต่อได้ ("ยังไม่มีรายการ — เพิ่มรายการแรก") |
+| error | บอกว่าเกิดอะไรขึ้นและทำอะไรต่อได้ ไม่ใช่ raw error จาก API/stack trace (ตรงกับ AI Smell #17 actionable error — ที่นี่คือฝั่ง UI ต้องแสดงใกล้จุดที่ผิดจริง ไม่ใช่ alert ลอยบนสุดของหน้า) |
+| success | ยืนยันชัดว่า action สำเร็จจริง ไม่ใช่หวังให้ user เข้าใจเองจาก URL เปลี่ยนหรือหน้านิ่งไปเฉยๆ |
+
+`measure-twice` ใช้ตรวจว่า 5 state นี้มีจริงตอน test — ที่นี่คือขั้นตอน**สร้าง**ให้มันมีตั้งแต่แรก
+
+## Nielsen Heuristics → กฎที่ทำได้จริง
+
+| Heuristic | กฎที่ใช้จริงในโปรเจค |
+|---|---|
+| System status | action ที่ใช้เวลา (network, upload) ต้องมี feedback ทันที (disable + loading text) — ห้ามปล่อยหน้าเงียบจน user กดซ้ำ |
+| Error prevention | จำกัดตัวเลือกด้วย dropdown/date picker แทน free text ที่ผิดง่าย, disable ปุ่ม submit จนกว่า required field ครบ |
+| Error recovery | error message บอก "เกิดอะไร" + "ทำอะไรต่อได้" อยู่ใกล้จุดที่ผิด (inline ใต้ field) ไม่ใช่ alert บนสุดของหน้า |
+| Consistency | ปุ่ม/สี/spacing เดียวกันทำหน้าที่เดียวกันทั้งระบบ — สีที่ใช้แทน destructive action ต้องหมายถึงอย่างนั้นทุกที่ ไม่ใช่บางหน้าเป็น primary action |
+| Recognition over recall | ไม่ให้ user จำ id/code จากหน้าก่อน — แสดงชื่อ/label ที่เข้าใจได้ตรงหน้าปัจจุบัน |
+| Minimalist design | ซ่อนตัวเลือกที่ไม่ใช่ทางหลักไว้หลัง "ตัวเลือกเพิ่มเติม" ไม่ยัดทุกอย่างขึ้นจอเดียว |
+| User control | modal/flow ที่แก้ไขข้อมูลต้องมีทางออก (cancel/back) ที่ไม่ทำลายข้อมูลที่ยังไม่ submit โดยไม่เตือนก่อน |
+
+## Accessibility พื้นฐานที่ทำได้จริง (ไม่ต้องเป็น a11y expert)
+
+- contrast ตัวอักษร/พื้นหลังผ่าน WCAG AA (ปกติ 4.5:1, ตัวใหญ่ 3:1) — เช็คด้วย contrast checker ก่อน lock สีจริงใน DESIGN.md (เฟส 2 ของ Design-from-Reference)
+- ทุก `<img>` มี `alt` ที่บอกเนื้อหาจริง (ไม่ใช่ชื่อไฟล์), icon-only button มี `aria-label`
+- form field ทุกอันมี `<label>` จริง — placeholder ไม่ใช่ label (หายตอนพิมพ์ user ลืมว่ากรอกอะไรอยู่)
+- error/success/warning ห้ามสื่อด้วยสีอย่างเดียว (คนตาบอดสีมองไม่เห็นต่าง) ต้องมี icon/ข้อความคู่กันเสมอ
+- ปุ่ม/link กด Tab ไล่ลำดับได้จริง ไม่ต้องพึ่งเมาส์อย่างเดียว
+
+## Examples
+
+```
+❌ กด submit แล้วหน้านิ่งเงียบ 2 วิ ไม่มีอะไรบอก           → user กดซ้ำเพราะคิดว่าไม่ติด
+✅ กด submit → ปุ่ม disable + "กำลังบันทึก..." ทันที         → รู้ว่าระบบรับคำสั่งแล้ว กันกดซ้ำในตัว
+
+❌ list ว่าง → แสดงตารางเปล่าไม่มีข้อความ
+✅ list ว่าง → "ยังไม่มีรายการลูกหนี้ — เพิ่มรายการแรก" + ปุ่มเพิ่ม
+
+❌ error → alert("Error: Undefined index id")               → raw, ไม่รู้ทำอะไรต่อ, ดูไม่เป็นมือโปร
+✅ error → inline ใต้ field ที่ผิด: "กรุณาเลือกลูกหนี้ก่อนบันทึก"
+
+❌ ปุ่มลบใช้สีแดง แต่บางหน้าปุ่ม "ยืนยัน" ก็สีแดงเหมือนกัน    → user กดผิดเพราะสีบอกความหมายไม่ตรงกันทั้งระบบ
+✅ สีแดง = destructive action เท่านั้น ทั้งระบบ
+```
+
+## Constraints
+
+- ทุกหน้าที่โหลดข้อมูล async ต้องออกแบบ 4 state ที่ไม่ใช่ default (loading/empty/error/success) ตั้งแต่ตอนเขียน ไม่ใช่ปล่อยว่างไว้แล้วมาเติมทีหลัง
+- ห้าม error message ที่เป็น raw exception/stack trace โผล่ที่ UI (ตรงกับ security checklist เรื่อง error leak ใน `measure-twice` ด้วย)
+- ห้ามสื่อสถานะ (error/success/warning) ด้วยสีอย่างเดียวโดยไม่มี text/icon ประกอบ
+- ปุ่ม action ที่มี loading state ต้อง disable ทันทีที่กด — ไม่ใช่แค่ UX เฉยๆ แต่กัน double-submit จริงด้วย (เชื่อมกับหัวข้อ Idempotency)
+- ก่อน lock สีจริงใน DESIGN.md ต้องเช็ค contrast ผ่าน WCAG AA — ไม่ใช่เอาสีจาก ref มาใช้ตรงๆ โดยไม่เช็ค
