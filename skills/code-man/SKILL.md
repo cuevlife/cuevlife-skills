@@ -1,6 +1,6 @@
 ---
 name: code-man
-description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging, senior UX/UI (5 states, Nielsen heuristics, accessibility) — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration), Senior UX/UI รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI/UX ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
+description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging, senior UX/UI (5 states, Nielsen heuristics, accessibility), senior database (index discipline, transaction scope, zero-downtime migration) — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration), Senior UX/UI รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI/UX ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
 ---
 
 # Code-Man — Full Coding Style
@@ -483,6 +483,33 @@ Flow บังคับ 4 เฟส ห้ามข้าม: **0. อ่าน 
 - ห้าม JOIN/query ที่ไม่ใช้ index — ดู EXPLAIN เมื่อ table ใหญ่
 - ห้าม SQL ที่อ่านไม่ออก (alias ลึกลับ, subquery ซ้อนลึก)
 
+## Index Discipline
+
+1. **FK ทุกตัวต้องมี index** → verify: `CREATE TABLE` มี FK constraint จะได้ index อัตโนมัติใน InnoDB ก็จริง แต่ถ้า schema เดิมไม่ได้ประกาศ FK จริง (แค่ผูกด้วย convention ในโค้ด) ต้องเช็คว่ามี index บน column นั้นเองไหม — join/filter โดยไม่มี index = full table scan
+2. **Composite index เรียงคอลัมน์ตามลำดับที่ query ใช้จริง (leftmost prefix rule)** → verify: index `(user_id, created_at)` ใช้กับ query ที่ filter `user_id` อย่างเดียว หรือ `user_id + created_at` ได้ แต่ใช้กับ query ที่ filter `created_at` อย่างเดียวไม่ได้ — เรียง column ที่ filter บ่อย/เท่ากันไว้ซ้ายสุด
+3. **ไม่ index มือเปล่าทุกคอลัมน์** → verify: table ที่ write บ่อย (log, event) index เพิ่มทุกตัว = insert ช้าขึ้นเพราะต้องอัปเดต index ทุกตัวด้วย — index เฉพาะคอลัมน์ที่ WHERE/JOIN/ORDER BY ใช้จริง
+
+## Transaction Scope — อย่าถือ lock ไว้นานเกินจำเป็น
+
+Transaction ที่เปิดค้างไว้นาน = lock ค้าง = request อื่นที่แก้ row เดียวกันต้องรอ ยิ่งนานยิ่งเสี่ยง deadlock
+
+1. **ห้ามเรียก API ภายนอก/ส่งอีเมล/อัปโหลดไฟล์ระหว่างอยู่ใน transaction** → verify: เรียก external call/I/O ที่ช้าและ timeout ได้ (payment gateway, SMTP, S3) เสร็จ**ก่อน** เปิด transaction หรือหลังปิด transaction แล้ว ไม่ใช่ระหว่างเปิดอยู่ — เครือข่ายช้า/ค้าง = lock ค้างตามไปด้วย
+2. **Transaction ทำเฉพาะงาน DB ที่ atomic จริงๆ** → verify: query/update ที่ต้องสำเร็จพร้อมกันทั้งหมดหรือไม่สำเร็จเลย (เช่น หักเงินบัญชี A + เพิ่มเงินบัญชี B) อยู่ใน transaction เดียว ส่วน logic คำนวณ/เตรียมข้อมูลที่ไม่แก้ DB ทำนอก transaction ก่อน
+
+```
+❌ DB::transaction(function () {
+       $order->update(['status' => 'paid']);
+       $paymentGateway->charge($amount);      // external call ค้างใน transaction — lock บัญชี user ไว้ทั้งที่รอ network
+       Mail::send(...);                       // ยิ่งช้าลงไปอีก
+   });
+
+✅ $result = $paymentGateway->charge($amount); // เรียกก่อน ไม่ถือ lock
+   DB::transaction(function () use ($result) {
+       $order->update(['status' => 'paid']);  // เฉพาะงาน DB ที่ต้อง atomic
+   });
+   Mail::send(...);                            // หลังปิด transaction แล้ว
+```
+
 ## Normalize status as int
 
 - `status` = TINYINT (1=active, 0=archived)
@@ -508,6 +535,7 @@ MariaDB (ต่างจาก MySQL 8) **ไม่มี native binary JSON typ
 - `created_at` / `updated_at` on every table
 - Soft delete (status=0) before hard delete
 - `FOR UPDATE` + transaction for critical writes
+- **ตารางที่มีข้อมูลจริง/production ใหญ่ (ALTER TABLE ตรงๆ จะ lock นาน)** → ห้ามแก้ schema ตรงๆ ในขั้นเดียว ต้องผ่าน expand-contract pattern — เปิด [references/zero-downtime-migration.md](references/zero-downtime-migration.md) ก่อนแก้เสมอ (ตารางเล็ก/dev environment ข้ามได้)
 
 ## Data migration (xlsx/csv)
 
