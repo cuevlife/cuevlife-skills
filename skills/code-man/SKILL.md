@@ -1,6 +1,6 @@
 ---
 name: code-man
-description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration) รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
+description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration) รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
 ---
 
 # Code-Man — Full Coding Style
@@ -131,6 +131,80 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 - ข้าม mechanism ของ framework ได้เฉพาะกรณีพิสูจน์แล้วว่าทำไม่ได้จริง — ต้องบอก user เหตุผลเสมอ ห้ามข้ามเงียบๆ
 - `AGENTS.md`/`CLAUDE.md` ของโปรเจกต์ (ถ้ามี) มีน้ำหนักเหนือกฎทั่วไปในหัวข้อนี้
 - **ลำดับความสำคัญเมื่อชนกัน: security > match pattern เดิม** — pattern เดิมที่ไม่ปลอดภัย (raw SQL ต่อ string, manual auth check ที่มีช่องโหว่) ไม่ใช่ของที่ต้อง "เคารพ" ห้ามเลียนแบบ แม้ทั้งโปรเจกต์เขียนแบบนั้นหมด ต้องบอก user เมื่อเจอ
+
+## Blast Radius — เช็คก่อนแก้ function/API ที่คนอื่นเรียกอยู่
+
+**Objective:** แก้/เปลี่ยน signature หรือ behavior ของ function ที่มีคนเรียกอยู่แล้ว โดยไม่รู้ว่าใครเรียกบ้าง = ของพังแบบไม่มีใครเห็นจนกว่าจะรันจริง
+
+1. **หา caller ทั้งหมดก่อนแก้** → verify: grep ชื่อ function/method/endpoint นี้ทั้งโปรเจกต์ (ไม่ใช่แค่ไฟล์ที่เปิดอยู่) — รวม view ที่เรียกผ่าน Blade/template, JS ที่ยิง endpoint นี้, cron/queue job
+2. **แยกว่าเป็น internal หรือ public contract** → verify: private method ในคลาสเดียว (แก้ได้ตรงๆ) vs public method/API endpoint ที่ frontend อื่น หรือระบบอื่นเรียก (ต้องคิดเรื่อง breaking change)
+3. **เปลี่ยน behavior ของ public contract** → verify: caller ทุกจุดที่ grep เจอยังทำงานถูกหลังแก้ ถ้าเปลี่ยน behavior จริง (ไม่ใช่แค่ internal refactor) → เพิ่ม parameter ใหม่แบบมี default เดิม/เพิ่ม method ใหม่แทนแก้ทับ ไม่ใช่เปลี่ยน behavior เดิมเงียบๆ
+4. **แก้ column/table ที่หลายจุด query อยู่** → verify: grep หาทุก query ที่ใช้ column นี้ ก่อน DROP/RENAME (ดู `grounded-db` เรื่อง migration)
+
+```
+❌ เปลี่ยน getInvoiceTotal() ให้คืนค่ารวม VAT ทันที โดยไม่เช็คว่ามีที่ไหนเรียกแล้วเอาไปคำนวณต่อ
+✅ grep หา getInvoiceTotal( ทั้งโปรเจกต์ก่อน → เจอ 3 จุดเรียกอยู่ → เพิ่ม getInvoiceTotalWithVat() แทน หรือแก้ 3 จุดพร้อมกันในรอบเดียว
+
+❌ RENAME COLUMN status TO order_status ตรงๆ เพราะคิดว่าชื่อเดิมไม่ดี
+✅ grep หา `status` ในบริบทตาราง orders ก่อน RENAME — เจอ query ตรงๆ ที่ไหนบ้าง แก้ให้ครบในรอบเดียว
+```
+
+**Constraints:**
+- ห้ามแก้ signature/behavior ของ public function/API/column โดยไม่ grep หา caller ทั้งโปรเจกต์ก่อน
+- เปลี่ยน behavior ของ contract ที่มีคนเรียกอยู่ (ไม่ใช่ private/internal) → เพิ่มของใหม่แทนแก้ทับ หรือแก้ caller ให้ครบทุกจุดในรอบเดียว ห้ามแก้ครึ่งเดียว
+- ไม่แน่ใจว่า grep ครบไหม (เรียกผ่าน reflection, dynamic method name, string ที่สร้าง endpoint) → บอก user ตรงๆ ว่าเช็คได้ไม่ครบ 100%
+
+## Idempotency — เรียกซ้ำต้องไม่พัง (double-submit, retry, webhook ซ้ำ)
+
+**Objective:** action ที่มี side effect จริง (สร้าง order, ตัดเงิน, ส่งอีเมล) ถูกเรียกซ้ำได้เสมอในโลกจริง (double-click, network timeout แล้ว browser retry, webhook ผู้ให้บริการยิงซ้ำ) — ต้องออกแบบให้เรียกซ้ำแล้วผลลัพธ์เหมือนเรียกครั้งเดียว ไม่ใช่สร้างซ้ำ/ตัดเงินซ้ำ
+
+1. **ระบุ action ที่มี side effect จริง** → verify: อะไรที่กดครั้งเดียวแต่ effect เกิดซ้ำได้ (form submit, payment webhook, retry job, API ที่เรียกจาก client ที่เน็ตหลุดได้)
+2. **ป้องกันฝั่ง client (UX เท่านั้น ไม่ใช่ security)** → verify: disable submit button ทันทีที่กด + แสดง loading state — กันคนกดซ้ำมือ แต่**ห้ามหยุดแค่นี้** เพราะ network retry/สอง request พร้อมกันข้าม client ไม่ได้ผ่านปุ่มเดียว
+3. **ป้องกันฝั่ง server ด้วย idempotency key/unique constraint** → verify: มี unique key ที่กันการสร้างซ้ำจริงที่ระดับ DB (ไม่ใช่แค่เช็คใน PHP แล้วมี race window) — เช่น unique constraint บน `(order_id)` ถ้า order สร้างจาก client เดียวครั้งเดียว, หรือ idempotency token ที่ client สร้างแล้วส่งมา เก็บลง DB ด้วย unique constraint ก่อน process
+4. **Webhook จากผู้ให้บริการภายนอก (payment gateway, LINE, etc.)** → verify: มี event id/transaction id จากผู้ส่ง → เก็บ id ที่ประมวลผลแล้วไว้ (unique constraint) เช็คก่อน process ทุกครั้ง ถ้าเคยประมวลผล id นี้แล้ว → return success เฉยๆ ไม่ทำซ้ำ
+
+```
+❌ ปุ่ม "ชำระเงิน" กดได้เรื่อยๆ ไม่ disable, insert order ทุกครั้งที่ submit form
+✅ disable ปุ่มทันทีที่กด (UX) + unique constraint บน orders(cart_session_id, created_date) หรือ idempotency_token ที่ client ส่งมาครั้งเดียว (server) — กดซ้ำ/double-click/retry ก็ insert ไม่ซ้ำ
+
+❌ webhook handler: รับ payment.success แล้ว credit เงินเข้าบัญชีทันทีทุกครั้งที่ยิงมา
+✅ เช็ค payment_events(gateway_event_id) unique constraint ก่อน — เคยเห็น event นี้แล้ว → return 200 เฉยๆ ไม่ credit ซ้ำ
+
+❌ เช็คซ้ำด้วย SELECT ก่อน INSERT ในโค้ด PHP (if not exists → insert) — มี race window ระหว่าง SELECT กับ INSERT ถ้ามี 2 request พร้อมกัน
+✅ ใช้ unique constraint ระดับ DB เป็นตัวกันจริง (catch duplicate-key exception แล้วถือว่าสำเร็จ) — DB เท่านั้นที่การันตี atomic ได้
+```
+
+**Constraints:**
+- action ที่มี side effect จริง (สร้าง record, ตัดเงิน, ส่งอีเมล/SMS) ต้องมี unique constraint หรือ idempotency key ระดับ DB กันการสร้างซ้ำ — ห้ามกันด้วย "disable ปุ่มฝั่ง client" อย่างเดียว
+- ห้ามใช้ "SELECT ก่อน แล้วค่อย INSERT" เป็นตัวกัน duplicate เพียงอย่างเดียว (มี race window) — ต้องมี unique constraint/lock ระดับ DB รองรับเสมอ
+- Webhook/callback จากภายนอกต้องเก็บ event id ที่ประมวลผลแล้ว เช็คซ้ำก่อน process ทุกครั้ง — สมมติว่าผู้ส่งจะยิงซ้ำได้เสมอ
+- ไม่ชัดว่า action ไหนต้องกัน idempotency บ้าง → ถามหรือระบุให้ user เห็นว่าจุดไหนกันแล้ว จุดไหนยังไม่กัน ไม่ใช่เดาว่าไม่จำเป็น
+
+## Observability — log ที่ช่วย debug ได้จริงตอนพังจริง
+
+**Objective:** error message ที่ actionable (มีอยู่แล้วในตาราง AI Smell #17) พอสำหรับตอน dev เจอ error ตรงหน้า แต่ตอนพังบน production ต้องมี log ที่สืบไปหา root cause ได้โดยไม่ต้องเดา
+
+1. **เลือก log level ให้ตรงความจริง** → verify: error = ของพังต้องดูจริง, warning = ผิดปกติแต่ยังทำงานต่อได้ (fallback ถูกใช้), info = event สำคัญของ business (order created, payment success) — ไม่ log ทุกอย่างเป็น error จนหา signal จริงไม่เจอ
+2. **log พร้อม context ที่สืบได้** → verify: มี identifier ที่ตามรอยได้ (user id, order id, request id) ไม่ใช่แค่ข้อความลอยๆ อย่าง "Error occurred"
+3. **ไม่ log ข้อมูลอ่อนไหว** → verify: password, token, เลขบัตร, ข้อมูลลูกค้าเต็มรูป ห้ามอยู่ใน log — ตรงกับกฎ "ห้ามเขียน" ของ `handoff` และ security checklist ใน `measure-twice`
+4. **log เฉพาะจุดที่ช่วย debug จริง** → verify: ไม่ log ทุก function เข้า-ออก (log spam หา signal จริงไม่เจอ) — log ที่ decision point, error path, external call (API/payment) ที่ตอบช้า/ล้มเหลวได้
+
+```
+❌ Log::error('Something went wrong');                          // ไม่รู้ว่าอะไรพัง ที่ไหน ของใคร
+✅ Log::error('Payment capture failed', ['order_id' => $order->id, 'gateway_ref' => $ref, 'reason' => $e->getMessage()]);
+
+❌ Log::info('User: '.$user->email.' password attempt: '.$password); // log ข้อมูลอ่อนไหว
+✅ Log::warning('Login failed', ['user_id' => $user->id, 'attempt_count' => $attempts]); // ไม่มี password/token
+
+❌ log ทุก method เข้า-ออกทั้งโปรเจกต์เป็น info                  // log spam หา signal จริงไม่เจอ
+✅ log เฉพาะ error path, external call, business event สำคัญ
+```
+
+**Constraints:**
+- ห้าม log password/token/เลขบัตร/ข้อมูลอ่อนไหวเด็ดขาด (ตรงกับ security checklist)
+- ห้าม log message ที่ไม่มี context ตามรอยได้ (id ที่เกี่ยวข้อง) เมื่อเป็น error/warning
+- ห้ามใช้ level `error` กับทุกอย่าง — แยก error/warning/info ตามความจริงของสถานการณ์
+- ห้าม log ทุก function call เป็น info จนกลายเป็น spam — log เฉพาะจุดที่ช่วย debug จริง
 
 ## Examples
 
