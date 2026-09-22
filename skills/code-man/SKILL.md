@@ -482,6 +482,35 @@ Flow บังคับ 4 เฟส ห้ามข้าม: **0. อ่าน 
 - ห้าม auto-import โดยไม่ให้ user ยืนยัน
 - ห้าม JOIN/query ที่ไม่ใช้ index — ดู EXPLAIN เมื่อ table ใหญ่
 - ห้าม SQL ที่อ่านไม่ออก (alias ลึกลับ, subquery ซ้อนลึก)
+- ห้าม query ที่ดึงข้อมูลไม่จำกัดจำนวน (list/report ที่โตได้) — ต้องมี pagination เสมอ (ดู "Pagination" ด้านล่าง)
+
+## Least Privilege — DB user ที่แอปใช้ต้องมีสิทธิ์แค่ที่จำเป็น
+
+1. **แยก credential แอปกับ credential migration/schema** → verify: connection ที่แอป production ใช้ทำงานประจำวัน (`.env` ที่ deploy จริง) มีสิทธิ์แค่ SELECT/INSERT/UPDATE/DELETE บนตารางที่ต้องใช้ — ไม่มี DROP/ALTER/CREATE USER/GRANT
+2. **รัน migration/schema change ด้วย credential แยกต่างหาก** → verify: credential ที่มีสิทธิ์ DROP/ALTER ใช้เฉพาะตอน deploy/migration (มือ หรือ script ที่รันครั้งเดียวตอน deploy) ไม่ใช่ credential เดียวกับที่แอปใช้ query ทุก request
+3. **เหตุผล** → ถ้า credential แอปหลุด (leak ผ่าน `.env` โผล่ผิดที่, SQL injection ที่หลุดผ่านมาตรการอื่นๆ) attacker ทำได้แค่ read/write ข้อมูลในตารางที่แอปใช้ ทำ DROP TABLE/สร้าง user ใหม่ไม่ได้
+
+```
+❌ .env production: DB_USER=root, DB_PASS=... (สิทธิ์เต็ม ทำอะไรก็ได้)
+✅ .env production: DB_USER=app_readwrite (SELECT/INSERT/UPDATE/DELETE เฉพาะตารางที่ใช้)
+   migration รันด้วย DB_USER=app_migrate (DDL) แยกจากตัวที่แอปใช้ ไม่เก็บไว้ใน .env ที่ deploy
+```
+
+## Pagination — ห้ามคืนผลลัพธ์ไม่จำกัดจำนวน
+
+1. **List/report ที่ข้อมูลโตได้ต้องมี LIMIT เสมอ** → verify: endpoint/query ที่ดึง list (orders, logs, users) มี default page size และ **max page size ที่ฝั่ง server บังคับ** — ไม่เชื่อค่า page size จาก client เกินเพดานที่ตั้งไว้ (client ขอ 1,000,000 แถวก็ต้องถูก cap)
+2. **ตารางที่ข้อมูลเปลี่ยนบ่อย/ใหญ่มาก ใช้ cursor/keyset pagination แทน OFFSET** → verify: `OFFSET` แพงขึ้นเรื่อยๆ ตามหน้าที่ลึกขึ้น (ต้อง scan ผ่านทุกแถวก่อนหน้า) และข้อมูลเปลี่ยนระหว่างเปิดหลายหน้าทำให้ข้าม/ซ้ำแถวได้ — cursor pagination (`WHERE id > :last_id ORDER BY id LIMIT :n`) เสถียรกว่าและเร็วกว่าเมื่อข้อมูลใหญ่
+
+```
+❌ SELECT * FROM orders ORDER BY created_at DESC;              // ไม่มี LIMIT เลย — ตารางโตแล้วดึงทั้งหมดทุกครั้ง
+✅ SELECT * FROM orders ORDER BY created_at DESC LIMIT 50 OFFSET :page;
+
+❌ รับ page_size จาก query string ตรงๆ ไม่เช็คเพดาน           // client ขอ 100000 ก็ให้
+✅ $pageSize = min($request->get('page_size', 20), 100);      // cap ฝั่ง server เสมอ
+
+❌ หน้า log ที่มีข้อมูลเข้าใหม่ตลอด ใช้ OFFSET เพจลึกๆ         // ข้าม/ซ้ำแถวเมื่อมีข้อมูลใหม่แทรกระหว่างเปิดหน้า
+✅ ใช้ cursor: WHERE id < :last_seen_id ORDER BY id DESC LIMIT 50
+```
 
 ## Index Discipline
 
