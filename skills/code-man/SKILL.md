@@ -1,6 +1,6 @@
 ---
 name: code-man
-description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging, senior UX/UI (5 states, Nielsen heuristics, accessibility), senior database (index discipline, transaction scope, zero-downtime migration) — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration), Senior UX/UI รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI/UX ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
+description: สไตล์การเขียนโค้ดครบสาย เน้นใช้ง่าย แก้ง่าย ไม่หลุดกรอบ framework, blast radius, idempotency (double-submit/webhook ซ้ำ), observability/logging, senior UX/UI (5 states, Nielsen heuristics, accessibility, visual hierarchy, perceived performance, motion design), senior database (index discipline, transaction scope, zero-downtime migration) — Human Coding (ไม่โผล่กลิ่น AI + Framework Boundary), Extensible Architecture (config-driven/feature flag/RBAC + สูตร solodev), CSS-First (CSS ก่อน JS เสมอ), Design-from-Reference (สร้างเว็บจากลิงค์ ref จริง), Grounded DB (schema/SQL/migration), Senior UX/UI รวม code + bend-not-break + css-first + design-from-ref + grounded-db เป็นก้อนเดียว ใช้เมื่อเขียน/แก้/ตรวจโค้ดทุกชนิด, refactor ให้ยืดหยุ่น, ทำงาน UI/UX ที่เกี่ยวกับ visual behavior, สร้างเว็บจากลิงค์ ref, หรือสร้าง/แก้ตาราง DB
 ---
 
 # Code-Man — Full Coding Style
@@ -614,6 +614,30 @@ MariaDB (ต่างจาก MySQL 8) **ไม่มี native binary JSON typ
 - error/success/warning ห้ามสื่อด้วยสีอย่างเดียว (คนตาบอดสีมองไม่เห็นต่าง) ต้องมี icon/ข้อความคู่กันเสมอ
 - ปุ่ม/link กด Tab ไล่ลำดับได้จริง ไม่ต้องพึ่งเมาส์อย่างเดียว
 
+## Visual Hierarchy — จัดลำดับให้ตาเห็นสิ่งสำคัญก่อนโดยไม่ต้องอ่าน
+
+1. **Typography scale ต้องมีอัตราส่วนจริง ไม่ใช่เดาเอา** → verify: ขนาดระหว่างระดับ heading ต่างกัน 1.25-1.5x ขึ้นไป (เช่น body 16px → h3 20px → h2 26px → h1 34px) ถ้าต่างกันน้อยกว่า 1.2x คนแยกระดับไม่ออก — ใช้ scale เดียวกันทั้งโปรเจกต์ (token จาก DESIGN.md)
+2. **Size/weight สื่อความสำคัญ ไม่ใช่แค่สวย** → verify: ปุ่ม primary action ใหญ่/หนักกว่าปุ่ม secondary เสมอในหน้าเดียวกัน, icon ที่เป็น action หลัก (เช่น 48px) ต้องใหญ่กว่า icon ประกอบ (เช่น 24px)
+3. **Whitespace เป็นเครื่องมือจัดลำดับ ไม่ใช่ที่เหลือจากไม่รู้จะใส่อะไร** → verify: ใช้ spacing scale เดียวกันทั้งโปรเจกต์ (4/8/16/24/32px) ระยะห่างระหว่าง section/group ที่ไม่เกี่ยวกันต้องมากกว่าระยะห่างภายใน group เดียวกันเสมอ (proximity principle — ของที่อยู่ใกล้กัน = เกี่ยวข้องกัน)
+4. **เช็คด้วย blur test ก่อนส่งงาน** → verify: เบลอหน้าจอ (หรือย่อภาพเล็กมากๆ) แล้วยังบอกได้ว่าอะไรคือ action หลัก/เนื้อหาหลัก — ถ้าดูไม่ออกแปลว่า hierarchy ไม่ทำงาน ต้องแก้ size/weight/spacing ก่อนไปต่อ
+
+## Perceived Performance — ทำให้ "รู้สึกเร็ว" ไม่ใช่แค่เร็วจริง
+
+**Skeleton screen vs spinner — เลือกตามงาน:**
+- action สั้น (< 1 วิ, submit ปุ่ม) → loading text/spinner บนปุ่มพอ (ตรงกับหัวข้อ Idempotency)
+- โหลดหน้า/content ที่รู้โครงล่วงหน้า (list, card, table) และใช้เวลา ≥ 1 วิ → skeleton screen ที่ mirror โครงจริง (กรอบ card/แถวเปล่าๆ ที่ shimmer) ไม่ใช่ spinner ลอยกลางจอเปล่าๆ — ทำให้รู้สึกว่าเนื้อหากำลังจะโผล่ ไม่ใช่รอเฉยๆ
+
+**Optimistic UI — ใช้เฉพาะ action ที่เสี่ยงต่ำ/ย้อนกลับได้ง่าย:**
+- action ที่โอกาสพลาดต่ำและย้อนกลับได้ถ้าพลาด (like, toggle favorite, reorder list, mark as read) → อัปเดต UI ทันทีโดยไม่รอ server ตอบ ถ้า request fail ค่อย rollback UI + toast แจ้ง
+- action ที่พลาดแล้วเสียหายจริง/ย้อนกลับยาก (payment, submit order, ลบข้อมูล) → **ห้ามใช้ optimistic UI** ใช้ pattern "disable+loading+รอ server ยืนยันจริง" ตามหัวข้อ Idempotency ในหัวข้อ 1 แทน — action พวกนี้ต้องรอผลจริงก่อนบอก user ว่าสำเร็จ
+- **ไม่ขัดกับ Idempotency**: optimistic UI คืออัปเดต "หน้าจอ" ก่อน แต่ request ที่ยิงไป server ยังต้องมี idempotency key/unique constraint เหมือนเดิม (เผื่อ user กดเร็วๆ ซ้ำ หรือ network retry) — สอง pattern นี้ทำงานคนละชั้น ใช้ร่วมกันได้ ไม่ใช่เลือกอย่างใดอย่างหนึ่ง
+
+## Motion Design — animation ต้องมีหน้าที่ ไม่ใช่ของประดับ
+
+1. **Animation ทุกตัวต้องตอบคำถามได้ว่า "เกิดอะไรขึ้น" หรือ "ทำอะไรต่อได้"** → verify: ถ้าเอา animation ออกแล้ว user ยังเข้าใจ state ได้เหมือนเดิม → ไม่มีหน้าที่จริง ตัดออกได้ (ตรงกับหลัก YAGNI/ไม่ทำเกินขอ ในหัวข้อ 1)
+2. **Duration สั้นพอที่จะรู้สึก "ไว"** → verify: feedback animation (hover, click, toggle) อยู่ในช่วง 100-300ms — สั้นกว่านี้ user มองไม่ทัน, นานกว่านี้รู้สึกหน่วง
+3. **Easing ต้องเข้ากับ context** → verify: element เข้าจอ (appear) ใช้ ease-out (เริ่มเร็วจบช้า, รู้สึกธรรมชาติ), element ออกจอ (dismiss) ใช้ ease-in (เริ่มช้าจบเร็ว) — ตรงกับหลัก `transition`/`easing` ที่ระบุไว้แล้วในหัวข้อ 3. CSS-First
+
 ## Examples
 
 ```
@@ -628,6 +652,18 @@ MariaDB (ต่างจาก MySQL 8) **ไม่มี native binary JSON typ
 
 ❌ ปุ่มลบใช้สีแดง แต่บางหน้าปุ่ม "ยืนยัน" ก็สีแดงเหมือนกัน    → user กดผิดเพราะสีบอกความหมายไม่ตรงกันทั้งระบบ
 ✅ สีแดง = destructive action เท่านั้น ทั้งระบบ
+
+❌ heading h1=24px, h2=22px, h3=20px (ต่างกัน 2px ทุกระดับ)   → เบลอแล้วแยกไม่ออกว่าอะไรคือหัวข้อหลัก
+✅ h1=34px, h2=26px, h3=20px, body=16px (ratio 1.25-1.3x)     → เบลอแล้วยังบอกได้ว่าอะไรสำคัญกว่า
+
+❌ list สินค้าที่โหลดช้า → spinner หมุนกลางจอเปล่าๆ 1.5 วิ
+✅ skeleton การ์ดสินค้า (กรอบเปล่า shimmer) ตามจำนวน/ตำแหน่งที่จะมีจริง → รู้สึกว่าเนื้อหากำลังจะโผล่
+
+❌ กดปุ่ม "ถูกใจ" (like) แล้วต้องรอ spinner 300ms ก่อนติ๊กติดจริง → รู้สึกหน่วงสำหรับ action ที่เสี่ยงต่ำ
+✅ กดแล้วติ๊กทันที (optimistic) ถ้า request fail ค่อย toggle กลับ + toast แจ้ง → รู้สึกไวและลื่น
+
+❌ กดปุ่ม "ยืนยันชำระเงิน" แล้ว UI บอกสำเร็จทันทีก่อน server ยืนยัน → ถ้า charge จริงไม่ผ่าน user เข้าใจผิดว่าจ่ายแล้ว
+✅ กดแล้ว disable + loading จนกว่า server ยืนยันจริง (ไม่ใช้ optimistic กับ action เสี่ยงสูง)
 ```
 
 ## Constraints
@@ -637,3 +673,6 @@ MariaDB (ต่างจาก MySQL 8) **ไม่มี native binary JSON typ
 - ห้ามสื่อสถานะ (error/success/warning) ด้วยสีอย่างเดียวโดยไม่มี text/icon ประกอบ
 - ปุ่ม action ที่มี loading state ต้อง disable ทันทีที่กด — ไม่ใช่แค่ UX เฉยๆ แต่กัน double-submit จริงด้วย (เชื่อมกับหัวข้อ Idempotency)
 - ก่อน lock สีจริงใน DESIGN.md ต้องเช็ค contrast ผ่าน WCAG AA — ไม่ใช่เอาสีจาก ref มาใช้ตรงๆ โดยไม่เช็ค
+- Typography scale ต้องต่างกันอย่างน้อย 1.2x ต่อระดับ — ต่ำกว่านี้ถือว่า hierarchy ไม่ทำงาน
+- ห้าม optimistic UI กับ action ที่พลาดแล้วเสียหายจริง/ย้อนกลับยาก (payment, submit order, ลบข้อมูลถาวร) — ใช้ disable+loading+รอ server ยืนยันเสมอ
+- Animation ที่เอาออกแล้ว user ยังเข้าใจ state ได้เหมือนเดิม = ไม่มีหน้าที่จริง ต้องตัดออก ไม่ใช่เก็บไว้เพราะดูสวย
