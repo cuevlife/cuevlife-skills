@@ -105,9 +105,18 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 3. โปรเจกต์มี `AGENTS.md`/`CLAUDE.md` เฉพาะตัว → อ่านกฎ framework-specific ที่นั่นก่อนเสมอ กฎในหัวข้อนี้เป็น fallback ทั่วไปเท่านั้น
 4. จำเป็นต้องข้าม mechanism จริงๆ (framework ทำไม่ได้ตามที่ต้องการ) → บอก user ตรงๆ ว่าข้ามเพราะอะไร ไม่ใช่ข้ามเงียบๆ
 
+**ถ้าโปรเจกต์เดิมเขียนแบบไม่ปลอดภัยอยู่แล้ว (เช่น `$pdo->query("SELECT * FROM users WHERE id = $id")` ต่อ string ตรงจาก input) — ห้ามยึด "match pattern เดิม" มาเลียนแบบ** นี่ไม่ใช่ mechanism ของ framework ที่ต้องเคารพ แต่เป็นการใช้ mechanism ผิดวิธี (PDO เองมี `prepare()`/bind อยู่แล้ว mechanism ที่ถูกอยู่ในมือแล้ว แค่โค้ดเดิมไม่ได้ใช้) กฎ security (`measure-twice` Phase 2 — ห้ามต่อ SQL string) ชนะกฎ "match pattern เดิม" เสมอ:
+- เขียนโค้ดใหม่ให้ใช้ prepared statement/bind ของ mechanism เดิม ไม่ใช่ raw string ต่อแบบเดิม
+- ไม่ต้องไปแก้โค้ดเก่าที่ไม่เกี่ยวกับงาน (ยังอยู่ตาม AI Smell #11) แต่ต้องบอก user สั้นๆ ว่าเจอโค้ดเดิมที่มีช่องโหว่นี้ ไม่ใช่เงียบๆ ปล่อยผ่าน
+- ถ้าไม่มี ORM/query builder ในโปรเจกต์เลย (raw PDO คือ mechanism เดียวที่มี) → ยังต้องใช้ PDO ให้ถูกวิธี (`prepare()` + `bindValue`/`execute([...])`) ไม่ใช่เขียนแบบเดิมที่ผิด
+
 ```
 ❌ $result = $pdo->query("SELECT * FROM users WHERE id = $id"); // framework มี Eloquent/query builder อยู่แล้ว
 ✅ User::where('id', $id)->first();
+
+❌ $pdo->query("SELECT * FROM users WHERE id = $id");           // โปรเจกต์นี้ไม่มี ORM, ของเดิมก็เขียนแบบนี้ทั้งโปรเจกต์
+✅ $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');   // ใช้ mechanism เดิม (PDO) แต่ใช้ให้ถูกวิธี — ไม่ลอกช่องโหว่ตาม
+   $stmt->execute([$id]);
 
 ❌ if ($_SESSION['role'] === 1) { ... }              // framework มี middleware/policy อยู่แล้ว
 ✅ $this->authorize('admin.access');                 // ใช้ auth mechanism ของ framework
@@ -121,6 +130,7 @@ AI Smell = สิ่งที่ต้องลบ, Human Essence = สิ่ง
 - ห้ามสร้างไฟล์ใหม่โดยไม่เปิดดู pattern ไฟล์ประเภทเดียวกันในโปรเจกต์ก่อน
 - ข้าม mechanism ของ framework ได้เฉพาะกรณีพิสูจน์แล้วว่าทำไม่ได้จริง — ต้องบอก user เหตุผลเสมอ ห้ามข้ามเงียบๆ
 - `AGENTS.md`/`CLAUDE.md` ของโปรเจกต์ (ถ้ามี) มีน้ำหนักเหนือกฎทั่วไปในหัวข้อนี้
+- **ลำดับความสำคัญเมื่อชนกัน: security > match pattern เดิม** — pattern เดิมที่ไม่ปลอดภัย (raw SQL ต่อ string, manual auth check ที่มีช่องโหว่) ไม่ใช่ของที่ต้อง "เคารพ" ห้ามเลียนแบบ แม้ทั้งโปรเจกต์เขียนแบบนั้นหมด ต้องบอก user เมื่อเจอ
 
 ## Examples
 
