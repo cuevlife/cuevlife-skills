@@ -64,9 +64,12 @@ description: สไตล์การเขียนโค้ดครบสา�
 | 12 | แก้หลายจุดในรอบเดียว | 1 commit = 1 เรื่อง — แก้ทีละจุดดูผลก่อน |
 | 13 | ครอบทั้งหน้า PHP ด้วย JS/AJAX ทั้งที่ HTML ล้วนก็ทำงานได้ | native HTML ก่อนเสมอ (`<a href>`, `<form>`, `<details>`) — เสริม AJAX เฉพาะจุดที่ HTML ทำไม่ได้จริง (ดูหัวข้อ 3. CSS-First) |
 | 14 | หลุดกรอบ framework (raw SQL ทั้งที่มี ORM, custom router/validator ทับของเดิม) | ดูหัวข้อ "Framework Boundary" ด้านล่าง — เช็ค mechanism ก่อนเขียนเองเสมอ |
-| 15 | Return type ไม่คงที่ — ฟังก์ชันเดียวกันคืน array บางครั้ง คืน null บางครั้ง โดยไม่มี type hint บอก | type hint ชัด (`: ?array`, `: array`) — ถ้าไม่เจอคืน `[]`/`throw` ไม่ใช่ปนกันไปมา |
+| 15 | Return type ไม่คงที่ — ฟังก์ชันเดียวกันคืน array บางครั้ง คืน null บางครั้ง โดยไม่มี type hint บอก, หรือฟังก์ชันเลเยอร์เดียวกัน (เช่น repository ทั้งชุด) บาง function throw บาง function คืน false สำหรับ error แบบเดียวกัน | type hint ชัด (`: ?array`, `: array`) เขียนแบบเดียวกันทั้งเลเยอร์ — ถ้าไม่เจอคืน `[]`/`throw` เลือกทางเดียวแล้วใช้ให้เหมือนกันหมด |
 | 16 | Hidden side effect — ชื่อบอกว่า "get/read" แต่ข้างในไป write DB/ไฟล์/session ด้วย | ชื่อต้องสะท้อนของจริง (`getUser()` ต้อง read-only, มี effect → ตั้งชื่อ `getUserAndTouchLastSeen()` หรือแยกเป็น 2 ฟังก์ชัน) |
 | 17 | Error/exception message บอกแค่ "invalid input"/"error occurred" ไม่บอกอะไรต่อ | บอกค่าที่ผิดจริงและเงื่อนไขที่ควรจะเป็น — `"qty ต้อง > 0 ได้รับ -5"` ไม่ใช่ `"invalid qty"` |
+| 18 | Boolean parameter trap — `sendInvoice($invoice, true, false)` เดาไม่ออกว่า `true`/`false` คืออะไรถ้าไม่เปิด source | ใช้ named argument (`sendInvoice($invoice, sendEmail: true)`), enum/constant, หรือแยกเป็นฟังก์ชันคนละชื่อ (`sendInvoiceSilently()`) |
+
+Item 15-18 มาจากหลักที่เรียกว่า **Principle of Least Astonishment** — ฟังก์ชัน/API ต้องทำสิ่งที่คาดเดาได้จากชื่อ ไม่ทำอะไรที่คนเรียกไม่คาดคิด (อ้างอิง Scott Meyers: "easy to use correctly, hard to use incorrectly")
 
 ## Human Essence — สิ่งที่ทำให้โค้ดดูมีคนเขียน
 
