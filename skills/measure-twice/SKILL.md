@@ -115,6 +115,7 @@ description: วินัยตลอด dev lifecycle แบบ solo dev — �
 4. **REFACTOR** → verify: โค้ดสะอาดขึ้น แต่ test ยังผ่านทั้งหมด
 5. **E2E ตามสเกลงาน** → verify: logic ซับซ้อน → unit test ใน tests/ (phpunit); flow/UI → browser จริง (Playwright/browser tools) ตรวจ viewport + interaction + state หลัก (default/loading/empty/error/success/disabled)
 6. **Regression** → verify: test เก่าทั้งหมดยังผ่าน — ของเดิมไม่พัง
+7. **Mock external dependency** → verify: logic ที่เรียก payment gateway/webhook sender/SMTP/API ภายนอก (ดู `code-man` หัวข้อ Idempotency) — test ต้อง mock ของเหล่านี้ ไม่ยิงของจริงตอนรัน test เพราะช้า, ไม่ deterministic, และเสี่ยงตัดเงิน/ส่งจริงถ้า mock หลุด
 
 ```
 ❌ เขียนโค้ดเสร็จ → "น่าจะเวิร์ค" → push      → ไม่มีหลักฐาน
@@ -138,6 +139,7 @@ description: วินัยตลอด dev lifecycle แบบ solo dev — �
 - ห้าม E2E ทุกอย่าง — ใช้ unit ก่อน, E2E เฉพาะ flow หลัก
 - ห้ามลบ/แก้ test ที่ผ่านอยู่โดยไม่มีเหตุผล — test เก่า = หลักฐาน regression
 - ห้ามบอกว่า "เสร็จแล้ว" โดย test ยังไม่ผ่าน — verify จริงก่อน
+- ห้าม test ที่เรียก external service จริง (payment gateway, SMTP, third-party API) — ต้อง mock เสมอ
 
 ---
 
@@ -184,7 +186,7 @@ description: วินัยตลอด dev lifecycle แบบ solo dev — �
 
 **Objective:** ตรวจงานก่อน commit/merge ให้จับปัญหาได้จริง (ไม่ใช่ดูผ่านๆ) — 2 แกน: Standards (เขียนถูก convention ไหม) + Spec (ตรง requirement ไหม behavior เดิมพังไหม) รายงานเป็น severity พร้อมหลักฐาน
 
-1. **กำหนดขอบเขต review** → verify: รู้ว่า review อะไร — diff ตั้งแต่ branch point / commit ที่เกี่ยวข้อง / ผลงาน AI ทั้งชิ้น
+1. **กำหนดขอบเขต review** → verify: รู้ว่า review อะไร — diff ตั้งแต่ branch point / commit ที่เกี่ยวข้อง / ผลงาน AI ทั้งชิ้น; diff กว้าง/ปนหลายเรื่องจนรีวิวไม่มั่นใจว่าครบ → หยุดบอก user ว่าควรแยกเป็นหลาย commit/PR ก่อน ไม่ใช่รีวิวรวดเดียวแบบเดา
 2. **แกน 1 — Standards** → verify: ไล่ AI smell table + Human Essence + Framework Boundary + Blast Radius + Idempotency + Observability (ใน `code-man` skill หัวข้อ 1. Human Coding): ชื่อ, abstraction, ทำเกินขอ, hardcode, comment, pattern ของโปรเจค, หลุดกรอบ framework, caller ที่ยังไม่เช็ค, double-submit/webhook ซ้ำ, log ที่ไม่ actionable
 3. **แกน 2 — Spec** → verify: ตรง requirement? behavior เดิมไม่พัง? edge case คิดครบ? (เทียบ test case จาก Phase 1)
 4. **รัน/ตรวจจริง** → verify: test ผ่าน, lint/static analysis ผ่าน, ลอง flow จริง (ไม่ใช่แค่อ่าน)
