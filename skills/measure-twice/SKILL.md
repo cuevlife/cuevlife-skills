@@ -101,7 +101,7 @@ description: วินัยตลอด dev lifecycle แบบ solo dev — �
 1. Break into small, verifiable steps
 2. Each step = ทำอย่างเดียว
 3. Verify each step before next
-4. เมื่อเริ่มเขียนโค้ดจริง → เปิดใช้ `code` skill (Human Coding) สำหรับสไตล์การเขียน แล้วเข้า **Phase 1 — Build (TDD)** ด้านล่างสำหรับ logic/flow
+4. เมื่อเริ่มเขียนโค้ดจริง → เปิดใช้ `code-man` skill (หัวข้อ 1. Human Coding) สำหรับสไตล์การเขียน แล้วเข้า **Phase 1 — Build (TDD)** ด้านล่างสำหรับ logic/flow
 
 ---
 
@@ -185,7 +185,7 @@ description: วินัยตลอด dev lifecycle แบบ solo dev — �
 **Objective:** ตรวจงานก่อน commit/merge ให้จับปัญหาได้จริง (ไม่ใช่ดูผ่านๆ) — 2 แกน: Standards (เขียนถูก convention ไหม) + Spec (ตรง requirement ไหม behavior เดิมพังไหม) รายงานเป็น severity พร้อมหลักฐาน
 
 1. **กำหนดขอบเขต review** → verify: รู้ว่า review อะไร — diff ตั้งแต่ branch point / commit ที่เกี่ยวข้อง / ผลงาน AI ทั้งชิ้น
-2. **แกน 1 — Standards** → verify: ไล่ AI smell table + Human Essence (ใน `code` skill): ชื่อ, abstraction, ทำเกินขอ, hardcode, comment, pattern ของโปรเจค
+2. **แกน 1 — Standards** → verify: ไล่ AI smell table + Human Essence + Framework Boundary + Blast Radius + Idempotency + Observability (ใน `code-man` skill หัวข้อ 1. Human Coding): ชื่อ, abstraction, ทำเกินขอ, hardcode, comment, pattern ของโปรเจค, หลุดกรอบ framework, caller ที่ยังไม่เช็ค, double-submit/webhook ซ้ำ, log ที่ไม่ actionable
 3. **แกน 2 — Spec** → verify: ตรง requirement? behavior เดิมไม่พัง? edge case คิดครบ? (เทียบ test case จาก Phase 1)
 4. **รัน/ตรวจจริง** → verify: test ผ่าน, lint/static analysis ผ่าน, ลอง flow จริง (ไม่ใช่แค่อ่าน)
 5. **รายงาน severity** → verify: แต่ละ finding มี: severity (blocker/major/minor/nit) + ที่อยู่ (ไฟล์:บรรทัด) + หลักฐาน + วิธีแก้
